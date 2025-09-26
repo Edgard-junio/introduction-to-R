@@ -79,6 +79,7 @@ dado_com_taxa_anual <- dado_desmatamento %>%
 Agora que o novo datarfame foi criado podemos visualizar como se comporta o desmatamento anual por bioma no Brasil.
 
 ```{r}
+# código da gemini
 ggplot(dado_com_taxa_anual, aes(x = ano, y = total_desmatado_anual, color = bioma, group = bioma)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2.5) +
@@ -180,7 +181,7 @@ A divergência entre as curvas de tendência do PIB e do desmatamento médio lev
 
 ```{r}
 dados_para_analise <- dados_marge %>%
-  # Calcula a taxa anual de desmatamento
+  # Calcula a taxa anual de desmatamento, o seguinte agrupamento foi feito com base do código da gemini
   arrange(id_municipio, ano) %>%
   group_by(id_municipio, bioma) %>%
   mutate(desmatamento_anual = desmatado - lag(desmatado, n = 1)) %>%
@@ -274,7 +275,6 @@ Em suma, podemos concluir que a relação entre o PIB e o desmatamento no Brasil
 
 ## Prompts Utilizados na Interação com IA
 * Prompt 1 : Me ajude a agrupar um dado por município e bioma 
-* Prompt 2 : Me ajude a remover as entradas vazias de um dataframe
-* Prompt 3 : Me ajude a plotar um gráfico de disperção.
+* Prompt 2 : Me ajude a plotar um gráfico de disperção.
 
 * A IA também foi utilizada para melhorar a escrita dos textos desse trabalho
