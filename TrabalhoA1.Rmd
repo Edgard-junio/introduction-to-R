@@ -1,0 +1,280 @@
+---
+title: "Trabalho A1"
+author: "Edgard Junio"
+date: "2025-09-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introdução
+
+O objetivo desta pesquisa é analisar a relação entre o crescimento do PIB dos municípios brasileiros e a quantidade de área desmatada em cada um deles. Para isso, serão utilizados dados anuais do PIB municipal, bem como informações sobre a extensão de área desmatada ao longo dos anos.A escolha dos dados do PIB municipal é justificada por ser um dos principais indicadores de atividade econômica, permitindo avaliar de que forma o crescimento econômico local pode estar associado ao avanço do desmatamento. Os dados do pib serão retirados do Instituto Brasileiro de Geografia e Estatística (IBGE) e os dados do desmatamento serão reditirados do Instituto Nacional de Pesquisas Espaciais (INPE), ambas as bases de dados estão disponíveis no site Base dos Dados (BD).
+
+# Importando as bibliotecas necessárias e os dados utilizados
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+
+pacotes_necessarios <- c("tidyverse", "ggplot2", "scales", "dplyr", "patchwork")
+
+# Verificando quais pacotes não estão instalados
+pacotes_a_instalar <- pacotes_necessarios[!pacotes_necessarios %in% installed.packages()[,"Package"]]
+
+# Instalando os pacotes que estão faltando
+if (length(pacotes_a_instalar) > 0) {
+  install.packages(pacotes_a_instalar)
+}
+
+# Carregando todos os pacotes necessários
+lapply(pacotes_necessarios, library, character.only = TRUE) 
+
+# Importando dados do pib
+dado_pib <- read_csv("br_ibge_pib_municipio.csv.gz")
+
+# Importando dados do desmatamento
+dado_desmatamento <- read_csv("br_inpe_prodes_municipio_bioma.csv.gz")
+
+```
+
+Antes de iniciarmos a análise precisamos tratar as bases de dados, pois elas possuem dados faltantes e o .csv com os dados do desmatamento possue dados de anos que não existem nos dados do pib.
+
+```{r}
+# Removendo as colunas que tem NA na coluna de interesse (pib)
+pib_filtrado <- dado_pib %>%
+  filter(!is.na(pib),pib > 0)
+# Removendo as colunas que tem NA na coluna de interesse (desmatamento) e mantendo os anos em comum com ambas as bases 
+inpe_filtrado <- dado_desmatamento %>%
+  filter(!is.na(desmatado), ano > 2001,ano < 2021, desmatado > 0)
+```
+
+Com as bases de dados tratadas, o passo seguinte é analisar a dinâmica do desmatamento. Para isso, visualizamos como a taxa de desmatamento anual se distribui entre os diferentes biomas. para isso os dados serão agrupados e então será criado um novo dataframe, calculando a soma da área desmatada para cada combinação única de 'ano' e 'bioma'. O resultado é uma base de dados sumarizada, pronta para a visualização do avanço do desmatamento em cada bioma.
+
+```{r}
+dado_com_taxa_anual <- dado_desmatamento %>%
+  # Primeiro devemos ordenar o dado
+  arrange(id_municipio, bioma, ano) %>%
+  
+  # Agrupamos por município e bioma para calcular a diferença ano a ano dentro de cada um
+  group_by(id_municipio, bioma) %>%
+  
+  # Criamos a nova coluna com o desmatamento daquele ano específico
+  mutate(
+    desmatamento_anual = desmatado - lag(desmatado, n = 1)
+  ) %>%
+  
+  # Filtramos linhas onde o cálculo não foi possível (o primeiro ano de cada município)
+  # e valores negativos que possam surgir de inconsistências nos dados
+  filter(!is.na(desmatamento_anual), desmatamento_anual >= 0) %>%
+  
+  # Agrupamos por ano e bioma para somar tudo
+  group_by(ano, bioma) %>%
+  summarise(
+    total_desmatado_anual = sum(desmatamento_anual, na.rm = TRUE),
+    .groups = 'drop'
+  )
+```
+
+Agora que o novo datarfame foi criado podemos visualizar como se comporta o desmatamento anual por bioma no Brasil.
+
+```{r}
+ggplot(dado_com_taxa_anual, aes(x = ano, y = total_desmatado_anual, color = bioma, group = bioma)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5) +
+  
+  scale_y_continuous(labels = label_number(scale_cut = cut_si(""))) + 
+  
+  labs(
+    title = "Evolução do Desmatamento Anual por Bioma",
+    subtitle = "Área total desmatada (km²) em cada ano (usando apenas dados do INPE)",
+    x = "Ano",
+    y = "Área Desmatada (km²)",
+    color = "Bioma"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(size = 16, face = "bold")
+  )
+```
+
+A primeira impressão o Brasil passou por um período de desmatamento altíssimo no início dos anos 2000, seguido por uma queda acentuada e expressiva até por volta de 2012, e uma posterior fase de estabilização em um patamar mais baixo, mas com uma preocupante tendência de alta nos anos mais recentes.
+
+A análise detalhada por bioma demonstra que a Amazônia e o Cerrado sofreram um desmatamento consideravelmente mais severo que os demais. Ambos apresentaram alta concentração de desmatamento nos anos iniciais, seguida por uma queda acentuada a partir de 2004 – um provável reflexo das políticas públicas da época. O Cerrado, por sua vez, manteve-se como um foco constante de pressão da fronteira agrícola, com uma queda menos íngreme e patamares de desmatamento consistentemente elevados. Os demais biomas, como Caatinga e Mata Atlântica, seguem em uma escala intermediária, enquanto Pampa e Pantanal registram os menores valores absolutos.
+
+A análise visual revelou que a dinâmica do desmatamento é complexa e varia significativamente entre os biomas. Com essa compreensão, a investigação avança para uma análise quantitativa, buscando medir o impacto que o crescimento do PIB municipal exerce sobre essas tendências. O primeiro passo para essa modelagem é a união das bases de dados mencionadas anteriormente, criando um painel de dados em nível municipal e anual.
+```{r}
+#juntando as duas bases de dados de acordo com as coluna id_municipio
+dados_marge <-  inner_join(pib_filtrado, inpe_filtrado ,  by = c("id_municipio","ano"))
+```
+
+# Glossário de Variáveis
+O novo Dataframe tem as seguintes variáveis:
+
+* `id_municipio`: Código único de identificação para cada município brasileiro, utilizado para cruzar as bases de dados.
+* `ano`: O ano de referência para os dados observados.
+* `pib`: Produto Interno Bruto do município, em Reais (R$).
+* `desmatado`: Área total de desmatamento acumulada no município até o ano correspondente, medida em km².
+* `bioma`: O bioma principal no qual o município está inserido (ex: Amazônia, Cerrado).
+* `desmatamento_anual`: Variável criada para representar a área desmatada em um único ano, calculada pela diferença do desmatamento acumulado entre um ano e o ano anterior (`desmatado(ano) - desmatado(ano-1)`).
+
+# Continuação da análise
+
+Para contextualizar a tendência de desmatamento, analisamos também a evolução do PIB no mesmo período. Como uma plotagem individual por município seria visualmente poluída, opta-se por uma abordagem agregada, calculando a média do PIB tornando interessante também, plotar o avanço do desmatamento médio ano a ano. A criação desses dois gráficos nos permite comparar as trajetórias da atividade econômica e do desmatamento, buscando identificar padrões de correlação visualmente.
+
+```{r}
+dados_com_taxa_anual <- dados_marge %>%
+  
+  # Ordenando os dados por município e, dentro de cada município, por ano.
+  arrange(id_municipio, ano) %>%
+  
+  # Agrupando os dados por município.
+  group_by(id_municipio) %>%
+  
+  # Cria a nova coluna 'desmatamento_anual'.
+  mutate(
+    desmatamento_anual = desmatado - lag(desmatado, n = 1)
+  ) %>%
+  
+  # Remove o agrupamento para que ele não afete operações futuras.
+  ungroup() %>%
+  
+  # Remove as linhas com NA na coluna 'desmatamento_anual'.
+  # Essas linhas correspondem ao primeiro ano de cada município, onde o cálculo do 'lag' não é possível.
+  filter(!is.na(desmatamento_anual)) %>%
+  
+  # Agrupa todos os dados por 'ano' para calcular as métricas nacionais anuais.
+  group_by(ano) %>%
+  
+  # Cria o resumo com duas colunas:
+  summarise(
+    # Calcula o PIB médio de todos os municípios para cada ano.
+    pib_medio = mean(pib, na.rm = TRUE),
+    # calcula a média dos desmatamentos para cada ano
+    taxa_desmatamento_ano = mean(desmatamento_anual, na.rm = TRUE)
+  )
+
+# Gráfico da evolução da TAXA de desmatamento.
+ggplot(dados_com_taxa_anual, aes(x = ano, y = taxa_desmatamento_ano)) +
+  geom_line(linewidth = 1.2, color = "darkgreen") +
+  geom_point(size = 3, color = "darkgreen") +
+
+  labs(title = "Evolução da TAXA Anual de Desmatamento", x = "Ano", y = "Média da Área Desmatada no Ano (km²)")
+
+
+ggplot(dados_com_taxa_anual, aes(x = ano, y = pib_medio)) +
+  geom_line(linewidth = 1.2, color = "navy") +
+  geom_point(size = 3, color = "navy") +
+
+  labs(title = "Evolução do PIB Médio dos Municípios", x = "Ano", y = "PIB Médio")
+```
+
+Quando colocados lado a lado, os gráficos contam uma história poderosa de "desacoplamento" entre o crescimento econômico e a pressão ambiental no Brasil durante este período.
+
+Enquanto a economia dos municípios, em média, crescia vigorosamente, a taxa de desmatamento despencava. Isso contradiz a ideia simplista de que o crescimento do PIB leva necessariamente a mais desmatamento.
+
+Este fenômeno de "crescer sem destruir na mesma proporção" está fortemente associado às políticas públicas de comando e controle, ao monitoramento por satélite (PRODES/DETER) e aos acordos de mercado (ex: Moratória da Soja) que foram implementados com mais intensidade a partir de meados dos anos 2000. 
+
+A divergência entre as curvas de tendência do PIB e do desmatamento médio levanta uma nova questão: como o nível de riqueza de um município se relaciona com sua performance ambiental em um mesmo ponto no tempo? Para explorar essa relação microeconômica, torna-se essencial a análise através de um gráfico de dispersão, capaz de revelar a estrutura da correlação entre as variáveis.
+
+```{r}
+dados_para_analise <- dados_marge %>%
+  # Calcula a taxa anual de desmatamento
+  arrange(id_municipio, ano) %>%
+  group_by(id_municipio, bioma) %>%
+  mutate(desmatamento_anual = desmatado - lag(desmatado, n = 1)) %>%
+  ungroup() %>%
+  filter(!is.na(desmatamento_anual), desmatamento_anual >= 0) %>%
+  
+  # Agrega por município-ano para ter uma linha única
+  group_by(id_municipio, ano, pib) %>%
+  summarise(total_desmatado_ano = sum(desmatamento_anual, na.rm = TRUE), .groups = 'drop') %>%
+  
+  # Filtra casos de PIB não positivo para o log funcionar
+  filter(pib > 0)
+  
+# 3. Cria o GRÁFICO DE DISPERSÃO (scatter plot)
+ggplot(dados_para_analise,aes(x = pib, y = total_desmatado_ano)) +
+  # A linha abaixo é a que cria o gráfico de dispersão
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = "lm", color = "red") +
+  
+  # Escalas logarítmicas para melhor visualização
+  scale_x_log10(labels = label_number(scale_cut = cut_si(""))) +
+  scale_y_log10(labels = label_number(scale_cut = cut_si("")), 
+                oob = scales::squish) +
+  
+  labs(
+    title = "Gráfico de Dispersão: PIB vs. Desmatamento Anual",
+    subtitle = "Cada ponto representa um município em um determinado ano",
+    x = "PIB do Município (Escala Log)",
+    y = "Área Desmatada no Ano (km²) (Escala Log)"
+  ) +
+  theme_minimal()
+```
+
+O gráfico de dispersão revela que a relação entre o PIB municipal e o desmatamento anual não segue um padrão linear. Em vez disso, a distribuição dos pontos assume a forma de um arco, ou 'U' invertido, o que é visualmente consistente com a hipótese da Curva Ambiental de Kuznets (CKA). A visualização sugere que o desmatamento tende a ser maior em municípios com PIBs intermediários, atingindo um ponto de inflexão a partir daí níveis mais elevados de PIB passam a ser associados a uma redução na área desmatada. Para aprofundar a análise, os dados foram segmentados em períodos distintos. O ano de 2012 foi escolhido como marco divisor, por representar o fim do ciclo de quedas acentuadas que se iniciou por volta de 2004. Dessa forma, é possível comparar a dinâmica da relação PIB-desmatamento durante a fase de políticas ambientais mais intensas (período pré-2012) com a fase subsequente, de novas tendências (pós-2012).
+
+```{r}
+# Exemplo para o primeiro período (até 2012)
+dados_periodo1 <- dados_para_analise %>% filter(ano <= 2012)
+
+# Exemplo para o segundo período (após 2012)
+dados_periodo2 <- dados_para_analise %>% filter(ano > 2012)
+
+plot_periodo1 <- ggplot(dados_periodo1, aes(x = pib, y = total_desmatado_ano)) +
+  geom_point(alpha = 0.3, color = "blue") +
+  geom_smooth(method = "lm", color = "darkblue", se = FALSE) + # se=FALSE remove a sombra de erro
+  scale_x_log10(labels = label_number(scale_cut = cut_si(""))) +
+  scale_y_log10(labels = label_number(scale_cut = cut_si("")), oob = scales::squish) +
+  labs(
+    title = "PIB vs. Desmatamento (Período 2002-2012)",
+    subtitle = "Fase de queda acentuada do desmatamento",
+    x = "PIB do Município (Escala Log)",
+    y = "Área Desmatada no Ano (km²) (Escala Log)"
+  ) +
+  theme_minimal()
+
+
+# Gerar o gráfico para o segundo período (após 2012) ---
+plot_periodo2 <- ggplot(dados_periodo2, aes(x = pib, y = total_desmatado_ano)) +
+  geom_point(alpha = 0.3, color = "red") +
+  geom_smooth(method = "lm", color = "darkred", se = FALSE) +
+  scale_x_log10(labels = label_number(scale_cut = cut_si(""))) +
+  scale_y_log10(labels = label_number(scale_cut = cut_si("")), oob = scales::squish) +
+  labs(
+    title = "PIB vs. Desmatamento (Período 2013-2020)",
+    subtitle = "Fase de estabilização e nova alta",
+    x = "PIB do Município (Escala Log)",
+    y = "Área Desmatada no Ano (km²) (Escala Log)"
+  ) +
+  theme_minimal()
+
+
+#Exibir os dois gráficos
+plot_periodo1 
+
+plot_periodo2
+
+```
+
+Ao comparar os gráficos de dispersão por período oferece a evidência mais robusta da dinâmica multifacetada entre o desenvolvimento econômico e o desmatamento no Brasil. O período de 2002 a 2012 demonstra um notável desacoplamento: o crescimento do PIB municipal, em média, não esteve associado a um aumento do desmatamento, e a linha de tendência horizontal (ou ligeiramente negativa) reflete o sucesso das políticas públicas e mecanismos de governança ambiental da época.
+
+Em contraste, o período de 2013 a 2020 (Gráfico da Direita) revela uma preocupante reconexão entre as variáveis. A linha de tendência positiva evidencia que, nesta fase, o crescimento do PIB municipal voltou a ter uma associação mais direta e positiva com o aumento da área desmatada. Este padrão sugere que, na ausência de uma governança ambiental desenvolvida e de incentivos claros à sustentabilidade, as pressões inerentes ao crescimento econômico e à expansão das fronteiras agrícolas tendem a aumentar, resultando em maior degradação ambiental.
+
+Em suma, podemos concluir que a relação entre o PIB e o desmatamento no Brasil não é estática ou linear, mas sim altamente sensível ao contexto político e regulatório. O controle do desmatamento, mesmo diante do avanço econômico, é possível e foi comprovado, mas exige um compromisso contínuo com a implementação e a manutenção de políticas ambientais eficazes.
+
+# Referências
+
+## Fontes de Dados
+* **PIB dos Municípios:** Instituto Brasileiro de Geografia e Estatística (IBGE), disponibilizado via Base dos Dados. Link: `https://basedosdados.org/dataset/fcf025ca-8b19-4131-8e2d-5ddb12492347?table=fbbbe77e-d234-4113-8af5-98724a956943`
+
+* **Desmatamento por Município (PRODES):** Instituto Nacional de Pesquisas Espaciais (INPE), disponibilizado via Base dos Dados. Link: `https://basedosdados.org/dataset/e5c87240-ecce-4856-97c5-e6b84984bf42?table=d7a76d45-c363-4494-826d-1580e997ebf0`
+
+## Prompts Utilizados na Interação com IA
+* Prompt 1 : Me ajude a agrupar um dado por município e bioma 
+* Prompt 2 : Me ajude a remover as entradas vazias de um dataframe
+* Prompt 3 : Me ajude a plotar um gráfico de disperção.
+
+* A IA também foi utilizada para melhorar a escrita dos textos desse trabalho
