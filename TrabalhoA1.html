@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-09-19" />
 
-<title>Trabalho A1</title>
+<title>Trabalho de Introdução ao R Aplicado em Ciência de Dados</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,7 +350,8 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Trabalho A1</h1>
+<h1 class="title toc-ignore">Trabalho de Introdução ao R Aplicado em
+Ciência de Dados</h1>
 <h4 class="author">Edgard Junio</h4>
 <h4 class="date">2025-09-19</h4>
 
@@ -391,6 +392,9 @@ dado_pib &lt;- read_csv(&quot;br_ibge_pib_municipio.csv.gz&quot;)
 
 # Importando dados do desmatamento
 dado_desmatamento &lt;- read_csv(&quot;br_inpe_prodes_municipio_bioma.csv.gz&quot;)</code></pre>
+</div>
+<div id="inicio-da-análise" class="section level1">
+<h1>Inicio da Análise</h1>
 <p>Antes de iniciarmos a análise precisamos tratar as bases de dados,
 pois elas possuem dados faltantes e o .csv com os dados do desmatamento
 possue dados de anos que não existem nos dados do pib.</p>
@@ -475,28 +479,6 @@ dados mencionadas anteriormente, criando um painel de dados em nível
 municipal e anual.</p>
 <pre class="r"><code>#juntando as duas bases de dados de acordo com as coluna id_municipio
 dados_marge &lt;-  inner_join(pib_filtrado, inpe_filtrado ,  by = c(&quot;id_municipio&quot;,&quot;ano&quot;))</code></pre>
-</div>
-<div id="glossário-de-variáveis" class="section level1">
-<h1>Glossário de Variáveis</h1>
-<p>O novo Dataframe tem as seguintes variáveis:</p>
-<ul>
-<li><code>id_municipio</code>: Código único de identificação para cada
-município brasileiro, utilizado para cruzar as bases de dados.</li>
-<li><code>ano</code>: O ano de referência para os dados observados.</li>
-<li><code>pib</code>: Produto Interno Bruto do município, em Reais
-(R$).</li>
-<li><code>desmatado</code>: Área total de desmatamento acumulada no
-município até o ano correspondente, medida em km².</li>
-<li><code>bioma</code>: O bioma principal no qual o município está
-inserido (ex: Amazônia, Cerrado).</li>
-<li><code>desmatamento_anual</code>: Variável criada para representar a
-área desmatada em um único ano, calculada pela diferença do desmatamento
-acumulado entre um ano e o ano anterior
-(<code>desmatado(ano) - desmatado(ano-1)</code>).</li>
-</ul>
-</div>
-<div id="continuação-da-análise" class="section level1">
-<h1>Continuação da análise</h1>
 <p>Para contextualizar a tendência de desmatamento, analisamos também a
 evolução do PIB no mesmo período. Como uma plotagem individual por
 município seria visualmente poluída, opta-se por uma abordagem agregada,
@@ -691,6 +673,35 @@ contexto político e regulatório. O controle do desmatamento, mesmo
 diante do avanço econômico, é possível e foi comprovado, mas exige um
 compromisso contínuo com a implementação e a manutenção de políticas
 ambientais eficazes.</p>
+</div>
+<div id="glossário-de-variáveis" class="section level1">
+<h1>Glossário de Variáveis</h1>
+<p>O novo Dataframe tem as seguintes variáveis:</p>
+<ul>
+<li><code>id_municipio</code>: Código único de identificação para cada
+município brasileiro, utilizado para cruzar as bases de dados.</li>
+<li><code>ano</code>: O ano de referência para os dados observados.</li>
+<li><code>pib</code>: Produto Interno Bruto do município, em Reais
+(R$).</li>
+<li><code>desmatado</code>: Área total de desmatamento acumulada no
+município até o ano correspondente, medida em km².</li>
+<li><code>bioma</code>: O bioma principal no qual o município está
+inserido (ex: Amazônia, Cerrado).</li>
+<li><code>desmatamento_anual</code>: Variável criada para representar a
+área desmatada em um único ano, calculada pela diferença do desmatamento
+acumulado entre um ano e o ano anterior
+(<code>desmatado(ano) - desmatado(ano-1)</code>).</li>
+</ul>
+</div>
+<div id="como-executar" class="section level1">
+<h1>Como executar</h1>
+<p>Todas os pacotes usados são verificados se estão instalados na sua
+máquina, logo após a verificação é feita a intalação dos pacotes que
+faltam.</p>
+<p>Para que os scripts funcionem corretamente, o diretório de trabalho
+(working directory) do R deve ser definido como a pasta raiz deste
+repositório. Isso permite que o código encontre os arquivos de dados
+(ex: read_csv(“nome_do_arquivo.csv”)).</p>
 </div>
 <div id="referências" class="section level1">
 <h1>Referências</h1>

@@ -1,5 +1,5 @@
 ---
-title: "Trabalho A1"
+title: "Trabalho de Introdução ao R Aplicado em Ciência de Dados"
 author: "Edgard Junio"
 date: "2025-09-19"
 output: html_document
@@ -37,6 +37,8 @@ dado_pib <- read_csv("br_ibge_pib_municipio.csv.gz")
 dado_desmatamento <- read_csv("br_inpe_prodes_municipio_bioma.csv.gz")
 
 ```
+
+# Inicio da Análise
 
 Antes de iniciarmos a análise precisamos tratar as bases de dados, pois elas possuem dados faltantes e o .csv com os dados do desmatamento possue dados de anos que não existem nos dados do pib.
 
@@ -109,18 +111,6 @@ A análise visual revelou que a dinâmica do desmatamento é complexa e varia si
 #juntando as duas bases de dados de acordo com as coluna id_municipio
 dados_marge <-  inner_join(pib_filtrado, inpe_filtrado ,  by = c("id_municipio","ano"))
 ```
-
-# Glossário de Variáveis
-O novo Dataframe tem as seguintes variáveis:
-
-* `id_municipio`: Código único de identificação para cada município brasileiro, utilizado para cruzar as bases de dados.
-* `ano`: O ano de referência para os dados observados.
-* `pib`: Produto Interno Bruto do município, em Reais (R$).
-* `desmatado`: Área total de desmatamento acumulada no município até o ano correspondente, medida em km².
-* `bioma`: O bioma principal no qual o município está inserido (ex: Amazônia, Cerrado).
-* `desmatamento_anual`: Variável criada para representar a área desmatada em um único ano, calculada pela diferença do desmatamento acumulado entre um ano e o ano anterior (`desmatado(ano) - desmatado(ano-1)`).
-
-# Continuação da análise
 
 Para contextualizar a tendência de desmatamento, analisamos também a evolução do PIB no mesmo período. Como uma plotagem individual por município seria visualmente poluída, opta-se por uma abordagem agregada, calculando a média do PIB tornando interessante também, plotar o avanço do desmatamento médio ano a ano. A criação desses dois gráficos nos permite comparar as trajetórias da atividade econômica e do desmatamento, buscando identificar padrões de correlação visualmente.
 
@@ -265,6 +255,22 @@ Ao comparar os gráficos de dispersão por período oferece a evidência mais ro
 Em contraste, o período de 2013 a 2020 (Gráfico da Direita) revela uma preocupante reconexão entre as variáveis. A linha de tendência positiva evidencia que, nesta fase, o crescimento do PIB municipal voltou a ter uma associação mais direta e positiva com o aumento da área desmatada. Este padrão sugere que, na ausência de uma governança ambiental desenvolvida e de incentivos claros à sustentabilidade, as pressões inerentes ao crescimento econômico e à expansão das fronteiras agrícolas tendem a aumentar, resultando em maior degradação ambiental.
 
 Em suma, podemos concluir que a relação entre o PIB e o desmatamento no Brasil não é estática ou linear, mas sim altamente sensível ao contexto político e regulatório. O controle do desmatamento, mesmo diante do avanço econômico, é possível e foi comprovado, mas exige um compromisso contínuo com a implementação e a manutenção de políticas ambientais eficazes.
+
+# Glossário de Variáveis
+O novo Dataframe tem as seguintes variáveis:
+
+* `id_municipio`: Código único de identificação para cada município brasileiro, utilizado para cruzar as bases de dados.
+* `ano`: O ano de referência para os dados observados.
+* `pib`: Produto Interno Bruto do município, em Reais (R$).
+* `desmatado`: Área total de desmatamento acumulada no município até o ano correspondente, medida em km².
+* `bioma`: O bioma principal no qual o município está inserido (ex: Amazônia, Cerrado).
+* `desmatamento_anual`: Variável criada para representar a área desmatada em um único ano, calculada pela diferença do desmatamento acumulado entre um ano e o ano anterior (`desmatado(ano) - desmatado(ano-1)`).
+
+# Como executar
+Todas os pacotes usados são verificados se estão instalados na sua máquina, logo após a verificação é feita a intalação dos pacotes que faltam.
+
+Para que os scripts funcionem corretamente, o diretório de trabalho (working directory) do R deve ser definido como a pasta raiz deste repositório. Isso permite que o código encontre os arquivos de dados (ex: read_csv("nome_do_arquivo.csv")).
+
 
 # Referências
 
