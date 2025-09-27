@@ -257,16 +257,16 @@ Em contraste, o período de 2013 a 2020 (Gráfico da Direita) revela uma preocup
 Em suma, podemos concluir que a relação entre o PIB e o desmatamento no Brasil não é estática ou linear, mas sim altamente sensível ao contexto político e regulatório. O controle do desmatamento, mesmo diante do avanço econômico, é possível e foi comprovado, mas exige um compromisso contínuo com a implementação e a manutenção de políticas ambientais eficazes.
 
 # Glossário de Variáveis
-O novo Dataframe tem as seguintes variáveis:
+O dataframe referende a união dos dados possui as seguintes variáveis (apenas as que foram usadas):
 
 * `id_municipio`: Código único de identificação para cada município brasileiro, utilizado para cruzar as bases de dados.
 * `ano`: O ano de referência para os dados observados.
 * `pib`: Produto Interno Bruto do município, em Reais (R$).
 * `desmatado`: Área total de desmatamento acumulada no município até o ano correspondente, medida em km².
 * `bioma`: O bioma principal no qual o município está inserido (ex: Amazônia, Cerrado).
-* `desmatamento_anual`: Variável criada para representar a área desmatada em um único ano, calculada pela diferença do desmatamento acumulado entre um ano e o ano anterior (`desmatado(ano) - desmatado(ano-1)`).
 
 # Como executar
+
 Todas os pacotes usados são verificados se estão instalados na sua máquina, logo após a verificação é feita a intalação dos pacotes que faltam.
 
 Para que os scripts funcionem corretamente, o diretório de trabalho (working directory) do R deve ser definido como a pasta raiz deste repositório. Isso permite que o código encontre os arquivos de dados (ex: read_csv("nome_do_arquivo.csv")).
