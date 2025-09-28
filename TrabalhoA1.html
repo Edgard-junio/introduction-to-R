@@ -374,15 +374,19 @@ as bases de dados estão disponíveis no site Base dos Dados (BD).</p>
 </div>
 <div id="importando-as-bibliotecas-necessárias-e-os-dados-utilizados" class="section level1">
 <h1>Importando as bibliotecas necessárias e os dados utilizados</h1>
-<pre class="r"><code>pacotes_necessarios &lt;- c(&quot;tidyverse&quot;, &quot;ggplot2&quot;, &quot;scales&quot;, &quot;dplyr&quot;, &quot;patchwork&quot;)
+<pre class="r"><code>options(repos = c(CRAN = &quot;https://cloud.r-project.org&quot;))
 
-# Verificando quais pacotes não estão instalados
-pacotes_a_instalar &lt;- pacotes_necessarios[!pacotes_necessarios %in% installed.packages()[,&quot;Package&quot;]]
+pacotes_necessarios &lt;- c(&quot;tidyverse&quot;, &quot;ggplot2&quot;, &quot;scales&quot;, &quot;dplyr&quot;, &quot;patchwork&quot;)
 
-# Instalando os pacotes que estão faltando
+# Instalar os que faltam
+pacotes_a_instalar &lt;- pacotes_necessarios[!pacotes_necessarios %in% installed.packages()[, &quot;Package&quot;]]
 if (length(pacotes_a_instalar) &gt; 0) {
   install.packages(pacotes_a_instalar)
 }
+
+# Forçar atualização do ggplot2 e patchwork (evita conflito de versão caso exista)
+install.packages(&quot;ggplot2&quot;)
+install.packages(&quot;patchwork&quot;)
 
 # Carregando todos os pacotes necessários
 lapply(pacotes_necessarios, library, character.only = TRUE) 

@@ -16,16 +16,19 @@ O objetivo desta pesquisa é analisar a relação entre o crescimento do PIB dos
 # Importando as bibliotecas necessárias e os dados utilizados
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 pacotes_necessarios <- c("tidyverse", "ggplot2", "scales", "dplyr", "patchwork")
 
-# Verificando quais pacotes não estão instalados
-pacotes_a_instalar <- pacotes_necessarios[!pacotes_necessarios %in% installed.packages()[,"Package"]]
-
-# Instalando os pacotes que estão faltando
+# Instalar os que faltam
+pacotes_a_instalar <- pacotes_necessarios[!pacotes_necessarios %in% installed.packages()[, "Package"]]
 if (length(pacotes_a_instalar) > 0) {
   install.packages(pacotes_a_instalar)
 }
+
+# Forçar atualização do ggplot2 e patchwork (evita conflito de versão caso exista)
+install.packages("ggplot2")
+install.packages("patchwork")
 
 # Carregando todos os pacotes necessários
 lapply(pacotes_necessarios, library, character.only = TRUE) 
